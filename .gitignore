@@ -1,0 +1,18 @@
+# .NET build output
+bin/
+obj/
+*.user
+
+# Rider / VS
+.idea/
+.vs/
+
+# Frontend (Bun / React)
+node_modules/
+dist/
+.bun/
+
+# Env & local secrets
+.env
+.env.*
+appsettings.*.local.json
