@@ -16,7 +16,7 @@ public class DraftConfiguration : IEntityTypeConfiguration<Draft>
         builder.Property(d => d.IsAiGenerated).IsRequired();
 
         // The Ticket ↔ Draft relationship (and its unique FK) is configured on the
-        // ticket side; here we only seed the draft rows.
-        builder.HasData(SeedData.Drafts());
+        // ticket side. Sample drafts are seeded at runtime in Development only
+        // (see DevelopmentDataSeeder), not via HasData.
     }
 }

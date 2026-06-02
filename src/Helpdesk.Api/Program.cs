@@ -1,4 +1,5 @@
 using Helpdesk.Infrastructure;
+using Helpdesk.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    // Seed sample tickets/drafts for local dev only (the owner user is seeded via migration).
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DevelopmentDataSeeder.SeedAsync(db);
 }
 
 app.UseHttpsRedirection();

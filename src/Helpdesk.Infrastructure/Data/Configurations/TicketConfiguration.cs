@@ -39,6 +39,7 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .HasForeignKey<Draft>(d => d.TicketId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasData(SeedData.Tickets());
+        // Sample tickets are seeded at runtime in Development only (see DevelopmentDataSeeder),
+        // not via HasData, so production databases stay empty.
     }
 }
