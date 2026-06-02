@@ -22,14 +22,15 @@ Goal: empty but buildable solution + frontend, committed.
 ## Phase 1 — Domain & persistence
 Goal: entities, repository contracts, EF Core wired to Postgres, first migration applied.
 
-- [ ] **Core:** entities — `Ticket`, `User`, `Reply`/`Draft`; enums `Category`,
-      `TicketState` (NeedsReview → Sent).
-- [ ] **Core:** repository interfaces — `ITicketRepository`, `IUserRepository`.
-- [ ] **Infrastructure:** `AppDbContext` + entity configurations.
-- [ ] **Infrastructure:** Npgsql provider + connection string via configuration.
-- [ ] **Infrastructure:** repository implementations.
-- [ ] Create + apply initial EF Core migration; verify tables in Postgres.
-- [ ] Seed a couple of sample tickets for local dev.
+- [x] **Core:** entities — `Ticket`, `User`, `Reply`/`Draft`; enums `Category`,
+      `TicketState` (NeedsReview → Sent). _(also `UserRole`)_
+- [x] **Core:** repository interfaces — `ITicketRepository`, `IUserRepository`.
+- [x] **Infrastructure:** `AppDbContext` + entity configurations.
+- [x] **Infrastructure:** Npgsql provider + connection string via configuration.
+      _(design-time factory reads `HELPDESK_DB` env var; app DI wiring is Phase 2)_
+- [x] **Infrastructure:** repository implementations.
+- [x] Create + apply initial EF Core migration; verify tables in Postgres.
+- [x] Seed a couple of sample tickets for local dev. _(via `HasData` in the migration)_
 
 ## Phase 2 — API foundation
 Goal: ticket data is reachable over HTTP.
