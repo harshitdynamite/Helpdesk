@@ -6,7 +6,7 @@ This is the companion repository for the YouTube series **"Full Stack .NET + Rea
 
 ---
 
-## 🎬 Watch the Series on my Youtube channel (https://youtube.com/playlist?list=PLf_tLWRz3DTOo4lC8UKmgXAEsx0KahHdr&si=Xa6OwflNg_gtlF0X)
+## 🎬 Watch the Series on my Youtube channel ([https://youtube.com/playlist?list=PLf_tLWRz3DTOo4lC8UKmgXAEsx0KahHdr&si=Xa6OwflNg_gtlF0X])
 
 | Part | Title | Status |
 |------|-------|--------|
@@ -125,7 +125,7 @@ dotnet ef database update --project src/Helpdesk.Infrastructure --startup-projec
 
 ## 🤝 How to Follow Along
 
-1. **Watch** the YouTube series here -> https://youtube.com/playlist?list=PLf_tLWRz3DTOo4lC8UKmgXAEsx0KahHdr&si=Xa6OwflNg_gtlF0X
+1. **Watch** the YouTube series here -> [https://youtube.com/playlist?list=PLf_tLWRz3DTOo4lC8UKmgXAEsx0KahHdr&si=Xa6OwflNg_gtlF0X]
 2. **Star** this repo to follow progress
 3. **Clone** the repo and build alongside the videos
 4. Each phase ends in a git commit — checkout the tag to start from any phase
@@ -151,7 +151,7 @@ By the end of the series you'll have seen how to build a complete, deployable, p
 
 ## 📬 Connect
 
-- **YouTube**: [your channel link]
+- **YouTube**: [https://youtube.com/@harshitdynamite?si=edQ2-fm-LbG0w9_d]
 - **GitHub**: [@harshitdynamite](https://github.com/harshitdynamite)
 
 ---
