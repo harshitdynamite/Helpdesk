@@ -16,3 +16,9 @@ dist/
 .env
 .env.*
 appsettings.*.local.json
+
+# Playwright E2E
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
+!frontend/.env.e2e.example

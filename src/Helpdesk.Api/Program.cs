@@ -55,7 +55,9 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// "Testing" is treated like Development here so E2E runs seed the bootstrap admin + sample
+// data into the dedicated test database (see frontend/playwright.config.ts).
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     app.MapOpenApi();
 
