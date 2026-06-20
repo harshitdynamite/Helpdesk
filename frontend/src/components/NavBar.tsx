@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router";
 import { useAuth } from "../auth/AuthContext";
+import { Button } from "@/components/ui/button";
+import { ModeToggle } from "./ModeToggle";
 
 export function NavBar() {
   const { session, logout } = useAuth();
@@ -11,17 +13,16 @@ export function NavBar() {
   };
 
   return (
-    <nav className="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-3.5">
-      <span className="text-lg font-bold text-white">Helpdesk</span>
+    <nav className="flex items-center justify-between border-b bg-card px-6 py-3">
+      <span className="text-lg font-bold">Helpdesk</span>
       <div className="flex items-center gap-4">
-        <span className="text-gray-300">{session?.displayName}</span>
-        <button
-          type="button"
-          className="rounded-lg bg-blue-600 px-4 py-1.5 font-bold text-white transition hover:-translate-y-px hover:bg-blue-700"
-          onClick={handleSignOut}
-        >
+        <span className="text-sm text-muted-foreground">
+          {session?.displayName}
+        </span>
+        <ModeToggle />
+        <Button type="button" variant="outline" size="sm" onClick={handleSignOut}>
           Sign out
-        </button>
+        </Button>
       </div>
     </nav>
   );

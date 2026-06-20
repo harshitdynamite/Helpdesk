@@ -4,6 +4,17 @@ import { z } from "zod";
 import { Navigate, useNavigate } from "react-router";
 import { useAuth } from "../auth/AuthContext";
 import { login as loginRequest } from "../api/client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ModeToggle } from "../components/ModeToggle";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email address"),
@@ -44,56 +55,62 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 p-8">
-      <form
-        className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-gray-800 bg-gray-900 p-8 text-left text-gray-100 shadow-xl"
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-      >
-        <h1 className="text-center text-3xl font-bold text-white">Helpdesk</h1>
-        <p className="mb-2 text-center text-gray-400">Sign in to your account</p>
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-muted p-8">
+      <div className="absolute right-4 top-4">
+        <ModeToggle />
+      </div>
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl">Helpdesk</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+          >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="username"
+                autoFocus
+                aria-invalid={errors.email ? "true" : undefined}
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
+            </div>
 
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-semibold">Email</span>
-          <input
-            type="email"
-            autoComplete="username"
-            autoFocus
-            aria-invalid={errors.email ? "true" : undefined}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2.5 text-base text-white outline-none transition-colors focus:border-blue-500 aria-[invalid=true]:border-red-500"
-            {...register("email")}
-          />
-          {errors.email && (
-            <p className="text-sm text-red-400">{errors.email.message}</p>
-          )}
-        </label>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                aria-invalid={errors.password ? "true" : undefined}
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="text-sm text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
 
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-semibold">Password</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={errors.password ? "true" : undefined}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2.5 text-base text-white outline-none transition-colors focus:border-blue-500 aria-[invalid=true]:border-red-500"
-            {...register("password")}
-          />
-          {errors.password && (
-            <p className="text-sm text-red-400">{errors.password.message}</p>
-          )}
-        </label>
+            {errors.root && (
+              <p className="text-sm text-destructive">{errors.root.message}</p>
+            )}
 
-        {errors.root && (
-          <p className="text-sm text-red-400">{errors.root.message}</p>
-        )}
-
-        <button
-          type="submit"
-          className="rounded-lg bg-blue-600 px-5 py-2.5 font-bold text-white transition hover:-translate-y-px hover:bg-blue-700 disabled:translate-y-0 disabled:cursor-default disabled:opacity-60 disabled:hover:bg-blue-600"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in…" : "Sign in"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

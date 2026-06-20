@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./auth/AuthContext";
 import { RequireAuth } from "./components/RequireAuth";
 import { NavBar } from "./components/NavBar";
@@ -8,27 +9,29 @@ import "./index.css";
 
 export function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/"
-            element={
-              <RequireAuth>
-                <div className="flex min-h-screen flex-col bg-gray-50">
-                  <NavBar />
-                  <main className="flex-1 p-8 text-center">
-                    <HomePage />
-                  </main>
-                </div>
-              </RequireAuth>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="system">
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/"
+              element={
+                <RequireAuth>
+                  <div className="flex min-h-screen flex-col bg-muted">
+                    <NavBar />
+                    <main className="flex-1 p-8 text-center">
+                      <HomePage />
+                    </main>
+                  </div>
+                </RequireAuth>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

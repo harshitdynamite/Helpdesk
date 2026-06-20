@@ -5,10 +5,10 @@ export function HomePage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900">
+      <h1 className="text-3xl font-bold text-foreground">
         Welcome, {session?.displayName}
       </h1>
-      <p className="mt-2 text-gray-500">
+      <p className="mt-2 text-muted-foreground">
         The ticket review queue will live here.
       </p>
     </div>
