@@ -1,14 +1,18 @@
 using Helpdesk.Core.Entities;
+using Helpdesk.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Helpdesk.Infrastructure.Data;
 
 /// <summary>
-/// EF Core context for the helpdesk domain. Entity shapes live in the
+/// EF Core context for the helpdesk domain. Inherits <see cref="IdentityUserContext{TUser,TKey}"/>
+/// so ASP.NET Core Identity owns the user/credential tables (no role tables — role is a plain
+/// column on <see cref="ApplicationUser"/>). Domain entity shapes live in the
 /// <c>IEntityTypeConfiguration</c> classes under <c>Data/Configurations</c>; this context
 /// also stamps <c>CreatedAt</c>/<c>UpdatedAt</c> automatically on save.
 /// </summary>
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityUserContext<ApplicationUser, Guid>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -16,10 +20,11 @@ public class AppDbContext : DbContext
 
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<Draft> Drafts => Set<Draft>();
-    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Identity's own entity configuration must run first.
+        base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 
@@ -52,8 +57,8 @@ public class AppDbContext : DbContext
                     entry.Property(nameof(Ticket.UpdatedAt)).CurrentValue = now;
                     break;
 
-                case User when entry.State == EntityState.Added:
-                    entry.Property(nameof(User.CreatedAt)).CurrentValue = now;
+                case ApplicationUser when entry.State == EntityState.Added:
+                    entry.Property(nameof(ApplicationUser.CreatedAt)).CurrentValue = now;
                     break;
             }
         }

@@ -1,6 +1,10 @@
+using Helpdesk.Core.Interfaces;
 using Helpdesk.Core.Repositories;
+using Helpdesk.Infrastructure.Auth;
 using Helpdesk.Infrastructure.Data;
+using Helpdesk.Infrastructure.Identity;
 using Helpdesk.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,8 +30,15 @@ public static class DependencyInjection
         // EF Core registers AppDbContext as scoped by default.
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
+        // ASP.NET Core Identity: password hashing + UserManager over the EF stores. No
+        // SignInManager/cookies — the API authenticates statelessly with JWTs.
+        services.AddIdentityCore<ApplicationUser>()
+            .AddEntityFrameworkStores<AppDbContext>();
+
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddScoped<ITokenService, TokenService>();
+
         services.AddScoped<ITicketRepository, TicketRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
 
         return services;
     }

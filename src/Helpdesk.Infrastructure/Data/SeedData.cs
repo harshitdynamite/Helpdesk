@@ -4,16 +4,14 @@ using Helpdesk.Core.Enums;
 namespace Helpdesk.Infrastructure.Data;
 
 /// <summary>
-/// Fixed sample rows baked into the initial migration for local development. Ids and
-/// timestamps are constant (required by EF <c>HasData</c>) so the seed is deterministic
-/// and idempotent across migrations. A couple of tickets simulate the post-AI state
+/// Fixed sample tickets/drafts for local development (the owner user is bootstrapped
+/// separately via <see cref="IdentitySeeder"/>). Ids and timestamps are constant so the
+/// seed is deterministic and idempotent. A couple of tickets simulate the post-AI state
 /// (category + summary + draft) so the future review queue has something to show.
 /// </summary>
 internal static class SeedData
 {
     // Stable identifiers, referenced from both the ticket and draft configurations.
-    public static readonly Guid OwnerUserId = new("a1000000-0000-0000-0000-000000000001");
-
     public static readonly Guid Ticket1Id = new("b1000000-0000-0000-0000-000000000001");
     public static readonly Guid Ticket2Id = new("b1000000-0000-0000-0000-000000000002");
     public static readonly Guid Ticket3Id = new("b1000000-0000-0000-0000-000000000003");
@@ -22,15 +20,6 @@ internal static class SeedData
     public static readonly Guid Draft2Id = new("c1000000-0000-0000-0000-000000000002");
 
     private static readonly DateTime Seeded = new(2026, 6, 1, 9, 0, 0, DateTimeKind.Utc);
-
-    public static User Owner() => new()
-    {
-        Id = OwnerUserId,
-        Email = "harshit.agarwal.se@gmail.com",
-        DisplayName = "Harshit Agarwal",
-        Role = UserRole.Admin,
-        CreatedAt = Seeded
-    };
 
     public static IEnumerable<Ticket> Tickets() =>
     [
