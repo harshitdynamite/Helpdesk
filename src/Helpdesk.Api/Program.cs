@@ -26,6 +26,14 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // JWT bearer authentication. The signing key/issuer/audience are validated against the
 // same Jwt config the token service signs with.
 var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+
+// Fail fast: an empty or short signing key means tokens can be forged with a trivially
+// guessable key. Catch misconfiguration at startup rather than silently accepting forged tokens.
+if (string.IsNullOrWhiteSpace(jwt.SigningKey) || jwt.SigningKey.Length < 32)
+    throw new InvalidOperationException(
+        "Jwt:SigningKey is missing or too short (minimum 32 characters). " +
+        "Set it in appsettings.Development.local.json, user-secrets, or an environment variable.");
+
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
