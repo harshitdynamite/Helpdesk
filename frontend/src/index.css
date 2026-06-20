@@ -239,13 +239,17 @@ code {
 .login-subtitle {
   margin: 0 0 0.5rem;
   text-align: center;
-  color: rgba(0, 0, 0, 0.55);
+  color: #555;
 }
 .login-field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.9em;
+}
+/* Form field label — semi-bold; reuse this convention for future form fields */
+.login-field > span {
+  font-weight: 600;
 }
 .login-field input {
   background: #fff;
