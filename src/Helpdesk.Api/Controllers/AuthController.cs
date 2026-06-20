@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Helpdesk.Api.Dtos.Auth;
+using Helpdesk.Core.Enums;
 using Helpdesk.Core.Interfaces;
 using Helpdesk.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -47,5 +48,37 @@ public class AuthController : ControllerBase
         var email = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email") ?? "";
         var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
         return Ok(new MeResponse(id, email, role));
+    }
+
+    /// <summary>
+    /// Admin-only: creates an Agent login. There is no self-service sign-up — an admin
+    /// provisions every agent account.
+    /// </summary>
+    [HttpPost("agents")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
+    public async Task<ActionResult<UserResponse>> CreateAgent(CreateAgentRequest request)
+    {
+        if (await _userManager.FindByEmailAsync(request.Email) is not null)
+            return Conflict($"A user with email '{request.Email}' already exists.");
+
+        var agent = new ApplicationUser
+        {
+            UserName = request.Email,
+            Email = request.Email,
+            DisplayName = request.DisplayName,
+            Role = UserRole.Agent,
+            EmailConfirmed = true
+        };
+
+        var result = await _userManager.CreateAsync(agent, request.Password);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(error.Code, error.Description);
+            return ValidationProblem(ModelState);
+        }
+
+        var response = new UserResponse(agent.Id, agent.Email!, agent.DisplayName, agent.Role.ToString());
+        return StatusCode(StatusCodes.Status201Created, response);
     }
 }

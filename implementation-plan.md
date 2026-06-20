@@ -45,10 +45,12 @@ Goal: ticket data is reachable over HTTP.
 Goal: admin can log in; admin can create agent logins; endpoints gated by role.
 ⚠️ Depends on the login-mechanism decision (Google SSO allow-list vs. email/password).
 
-- [ ] Choose + wire auth scheme; `User` carries `Role` (Admin/Agent).
-- [ ] Bootstrap the owner as the first Admin (seed/config).
-- [ ] `AuthController`: login + (admin-only) create-agent endpoint.
-- [ ] Role-based authorization attributes on protected endpoints.
+- [x] Choose + wire auth scheme; `ApplicationUser` carries `Role` (Admin/Agent).
+      _(email/password via ASP.NET Core Identity + JWT bearer)_
+- [x] Bootstrap the owner as the first Admin (seed/config). _(via `IdentitySeeder` + `Bootstrap:*` config)_
+- [x] `AuthController`: login + (admin-only) create-agent endpoint.
+- [x] Role-based authorization attributes on protected endpoints.
+      _(`[Authorize]` / `[Authorize(Roles = Admin)]`; broader endpoint gating lands with `TicketsController` in Phase 2)_
 - [ ] Minimal login UI in the frontend; store/attach the token.
 
 ## Phase 4 — Gmail ingestion
