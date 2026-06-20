@@ -30,9 +30,24 @@ bun dev            # dev server with HMR → http://localhost:3000
 bun run build      # production bundle to dist/
 ```
 
-Run both together: start the backend on 5155 first, then `bun dev`. The frontend dev server (`frontend/src/index.ts`) proxies all `/api/*` requests to `http://localhost:5155`, so the browser only ever talks to port 3000.
+Run both together: start the backend on 5155 first, then `bun dev`. The frontend dev server (`frontend/src/index.ts`) proxies all `/api/*` requests to `http://localhost:5155`, so the browser only ever talks to port 3000. The proxy target and listen port are env-overridable (`API_PROXY_TARGET`, `PORT`), defaulting to those dev values.
 
-No test runner or linter is configured yet.
+### Testing — Playwright E2E (run from `frontend/`)
+
+```bash
+bun run e2e            # full-stack E2E run (Playwright orchestrates everything)
+bun run e2e:ui         # same, in Playwright's interactive UI mode
+bun run e2e:install    # one-time: download Playwright browser binaries
+```
+
+There is **no unit/integration test runner yet** (no xUnit project, no Vitest). The only tests are **Playwright E2E** under `frontend/e2e/` (config: `frontend/playwright.config.ts`). Key points:
+
+- **Full orchestration, fully isolated.** `bun run e2e` starts its own API + frontend on **dedicated ports** (API `:5200`, frontend `:3100` — overridable via `E2E_API_PORT` / `E2E_WEB_PORT`) pointed at a **separate `helpdesk_e2e` PostgreSQL database**. So E2E runs **alongside** the dev servers without colliding.
+- **The `Testing` environment.** The E2E API runs with `ASPNETCORE_ENVIRONMENT=Testing`; `Program.cs` treats `Testing` like `Development` for seeding so the bootstrap admin (`admin@e2e.test` / `Admin!2345`) and sample data are created in the test DB. The test connection string, JWT key, and bootstrap creds are injected as env vars by `playwright.config.ts` (nothing test-specific is committed to `appsettings*.json`).
+- **DB lifecycle.** `frontend/e2e/start-api.ts` migrates the test DB (via Infrastructure's `AppDbContextFactory` + the `HELPDESK_DB` env var) **before** the API serves, then runs the API. It uses `--no-build` to avoid fighting a running dev `dotnet run` over the shared `bin/` (which otherwise causes `MSB3027` file locks); it builds once only if no artifacts exist. There is currently **no per-run DB reset** — the test DB persists between runs (seeders are idempotent).
+- **Local DB credentials** live in a gitignored `frontend/.env.e2e` (copy `frontend/.env.e2e.example`; set `E2E_DB_PASSWORD` to your local Postgres password).
+
+No test files exist yet — `frontend/e2e/` holds only the harness. Use the **playwright-e2e-author** agent to write specs for user-facing flows (login, review queue, review screen).
 
 ## Architecture
 
