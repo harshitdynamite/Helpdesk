@@ -16,11 +16,18 @@ const dbPassword = process.env.E2E_DB_PASSWORD ?? "postgres";
 const testConnectionString =
   `Host=${dbHost};Port=${dbPort};Database=${dbName};Username=${dbUser};Password=${dbPassword}`;
 
+// Dedicated E2E ports (distinct from dev's 5155/3000) so the E2E stack can run alongside
+// the dev servers without colliding. Overridable via env.
+const apiPort = process.env.E2E_API_PORT ?? "5200";
+const webPort = process.env.E2E_WEB_PORT ?? "3100";
+const apiUrl = `http://localhost:${apiPort}`;
+const webUrl = `http://localhost:${webPort}`;
+
 // Fixed, non-secret test values — safe to commit. They only ever apply to the throwaway
 // test database under the Testing environment, never to dev or prod.
 const apiEnv: Record<string, string> = {
   ASPNETCORE_ENVIRONMENT: "Testing",
-  ASPNETCORE_URLS: "http://localhost:5155",
+  ASPNETCORE_URLS: apiUrl,
   ConnectionStrings__Default: testConnectionString,
   Jwt__SigningKey: "e2e-test-signing-key-do-not-use-in-prod-0123456789",
   Bootstrap__AdminEmail: "admin@e2e.test",
@@ -37,7 +44,7 @@ export default defineConfig({
   retries: isCI ? 2 : 0,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: webUrl,
     trace: "on-first-retry",
   },
   projects: [
@@ -46,28 +53,25 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  // Full-stack orchestration: the API migrates/creates the test DB and boots against it,
-  // then the frontend dev server (which proxies /api/* -> :5155) comes up.
-  //
-  // reuseExistingServer is intentionally false: a dev API on :5155 points at the *dev*
-  // database, so reusing it would run tests against unseeded/dev data (no Testing-env
-  // bootstrap admin). Forcing a fresh boot guarantees start-api.ts migrates+seeds
-  // helpdesk_e2e every run, and that the frontend serves a current bundle. The trade-off
-  // is that any process already holding :5155 / :3000 must be stopped first.
+  // Full-stack orchestration: the API migrates/creates the test DB and boots against it on
+  // a dedicated port, then the frontend dev server (proxying /api/* -> the test API) comes
+  // up on its own port. These ports are distinct from dev's 5155/3000, so E2E coexists with
+  // a running dev stack — and reuse is safe because nothing else binds the E2E ports.
   webServer: [
     {
       command: "bun run e2e/start-api.ts",
-      url: "http://localhost:5155/api/health",
+      url: `${apiUrl}/api/health`,
       env: apiEnv,
-      reuseExistingServer: false,
+      reuseExistingServer: !isCI,
       timeout: 120_000,
       stdout: "pipe",
       stderr: "pipe",
     },
     {
       command: "bun dev",
-      url: "http://localhost:3000",
-      reuseExistingServer: false,
+      url: webUrl,
+      env: { PORT: webPort, API_PROXY_TARGET: apiUrl },
+      reuseExistingServer: !isCI,
       timeout: 60_000,
     },
   ],
