@@ -265,6 +265,9 @@ code {
 .login-field input:focus {
   border-color: #2563eb;
 }
+.login-field input[aria-invalid="true"] {
+  border-color: #dc2626;
+}
 .login-error {
   margin: 0;
   color: #dc2626;

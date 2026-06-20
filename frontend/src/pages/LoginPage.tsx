@@ -1,39 +1,51 @@
-import { useState, type FormEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Navigate, useNavigate } from "react-router";
 import { useAuth } from "../auth/AuthContext";
 import { login as loginRequest } from "../api/client";
+
+const loginSchema = z.object({
+  email: z.email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
   // Already signed in → no reason to show the login form.
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    setSubmitting(true);
+  const onSubmit = async (values: LoginForm) => {
     try {
-      const session = await loginRequest(email, password);
+      const session = await loginRequest(values.email, values.password);
       login(session);
       navigate("/", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
-      setSubmitting(false);
+      setError("root", {
+        message: err instanceof Error ? err.message : "Something went wrong.",
+      });
     }
   };
 
   return (
     <div className="login-page">
-      <form className="login-card" onSubmit={handleSubmit}>
+      <form className="login-card" onSubmit={handleSubmit(onSubmit)} noValidate>
         <h1 className="login-title">Helpdesk</h1>
         <p className="login-subtitle">Sign in to your account</p>
 
@@ -41,31 +53,33 @@ export function LoginPage() {
           <span>Email</span>
           <input
             type="email"
-            name="email"
             autoComplete="username"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
             autoFocus
+            aria-invalid={errors.email ? "true" : undefined}
+            {...register("email")}
           />
+          {errors.email && (
+            <p className="login-error">{errors.email.message}</p>
+          )}
         </label>
 
         <label className="login-field">
           <span>Password</span>
           <input
             type="password"
-            name="password"
             autoComplete="current-password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
+            aria-invalid={errors.password ? "true" : undefined}
+            {...register("password")}
           />
+          {errors.password && (
+            <p className="login-error">{errors.password.message}</p>
+          )}
         </label>
 
-        {error && <p className="login-error">{error}</p>}
+        {errors.root && <p className="login-error">{errors.root.message}</p>}
 
-        <button type="submit" className="login-button" disabled={submitting}>
-          {submitting ? "Signing in…" : "Sign in"}
+        <button type="submit" className="login-button" disabled={isSubmitting}>
+          {isSubmitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </div>
