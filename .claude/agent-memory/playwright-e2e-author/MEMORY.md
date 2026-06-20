@@ -1,0 +1,1 @@
+- [Auth E2E surface](project-auth-e2e-surface.md) — routes, selectors, localStorage key, addInitScript pitfalls, seeded creds, all 34 tests passing

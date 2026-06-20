@@ -39,6 +39,9 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   testDir: "./e2e",
+  // Keep per-test artifacts (traces, screenshots, videos) under e2e/ rather than the
+  // frontend root.
+  outputDir: "./e2e/test-results",
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
