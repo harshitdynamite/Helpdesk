@@ -16,9 +16,9 @@ export function App() {
             path="/"
             element={
               <RequireAuth>
-                <div className="app-shell">
+                <div className="flex min-h-screen flex-col bg-gray-50">
                   <NavBar />
-                  <main className="app-main">
+                  <main className="flex-1 p-8 text-center">
                     <HomePage />
                   </main>
                 </div>

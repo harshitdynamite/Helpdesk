@@ -4,9 +4,11 @@ export function HomePage() {
   const { session } = useAuth();
 
   return (
-    <div className="home">
-      <h1>Welcome, {session?.displayName}</h1>
-      <p className="home-hint">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">
+        Welcome, {session?.displayName}
+      </h1>
+      <p className="mt-2 text-gray-500">
         The ticket review queue will live here.
       </p>
     </div>

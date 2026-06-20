@@ -11,11 +11,15 @@ export function NavBar() {
   };
 
   return (
-    <nav className="nav-bar">
-      <span className="nav-brand">Helpdesk</span>
-      <div className="nav-user">
-        <span className="nav-name">{session?.displayName}</span>
-        <button type="button" className="nav-signout" onClick={handleSignOut}>
+    <nav className="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-3.5">
+      <span className="text-lg font-bold text-white">Helpdesk</span>
+      <div className="flex items-center gap-4">
+        <span className="text-gray-300">{session?.displayName}</span>
+        <button
+          type="button"
+          className="rounded-lg bg-blue-600 px-4 py-1.5 font-bold text-white transition hover:-translate-y-px hover:bg-blue-700"
+          onClick={handleSignOut}
+        >
           Sign out
         </button>
       </div>

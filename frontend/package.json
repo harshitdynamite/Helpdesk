@@ -5,15 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "bun --hot src/index.ts",
-    "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
+    "build": "bun run build.ts",
     "start": "NODE_ENV=production bun src/index.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "bun-plugin-tailwind": "^0.1.2",
     "react": "^19",
     "react-dom": "^19",
     "react-hook-form": "^7.80.0",
     "react-router": "^8.0.1",
+    "tailwindcss": "^4.3.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
