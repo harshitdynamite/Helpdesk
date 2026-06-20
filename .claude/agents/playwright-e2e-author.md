@@ -15,17 +15,28 @@ This is the Helpdesk project — an AI-assisted support-ticket MVP with two inde
 - **Backend** is .NET 10 (`src/Helpdesk.Api`), run with `dotnet run --project src/Helpdesk.Api --launch-profile http` on `http://localhost:5155`. Auth is **email/password via ASP.NET Core Identity returning a JWT** from `POST /api/auth/login`. No reply is ever auto-sent — a human approves every one.
 - The frontend agent UI it is growing into: a login flow, a ticket **review queue** (list with filter/sort), and a **review screen** (original email, AI summary + category, editable draft, send button).
 
-The browser only ever talks to port 3000; `/api/*` is proxied to the backend. Your tests should target `http://localhost:3000` as the base URL so the proxy seam is exercised the same way real users hit it.
+The browser only ever talks to the frontend; `/api/*` is proxied to the backend, so the proxy seam is exercised the same way real users hit it. Always navigate with **relative paths** against the configured `baseURL` (e.g. `await page.goto('/login')`) — never hardcode a port, because the E2E harness runs the frontend on a dedicated port (see below).
+
+## E2E Harness (already configured — do not re-scaffold)
+
+Playwright is **already installed and wired up** in this repo. Before authoring specs, read `frontend/playwright.config.ts` and `frontend/e2e/start-api.ts` to ground yourself; do not re-create setup or duplicate config. Current facts:
+
+- **Commands** (run from `frontend/`): `bun run e2e` (full run), `bun run e2e:ui` (interactive UI mode), `bun run e2e:install` (one-time browser binaries). Specs live in `frontend/e2e/` (`testDir: './e2e'`, chromium project).
+- **Full orchestration against a real, seeded backend — NOT mocked.** `bun run e2e` boots its own API and frontend on **dedicated ports** (API `:5200`, frontend `:3100`; override via `E2E_API_PORT` / `E2E_WEB_PORT`) pointed at a **separate `helpdesk_e2e` PostgreSQL database**, so it runs alongside the dev servers (5155/3000) without colliding. `reuseExistingServer` is on outside CI.
+- **Testing environment + seeding.** The E2E API runs with `ASPNETCORE_ENVIRONMENT=Testing`; `Program.cs` seeds under `Testing` as well as `Development`, so a bootstrap admin (`admin@e2e.test` / `Admin!2345`) and sample tickets exist in the test DB on every run. The connection string, JWT signing key, and bootstrap creds are injected as env vars by `playwright.config.ts` (nothing test-specific is committed to `appsettings*.json`).
+- **DB lifecycle.** `frontend/e2e/start-api.ts` migrates the test DB (via Infrastructure's `AppDbContextFactory` + the `HELPDESK_DB` env var) **before** the API serves, then runs the API with `--no-build` so it doesn't fight a running dev `dotnet run` over the shared `bin/` (which otherwise throws `MSB3027` file locks); it builds once only if no artifacts exist. There is **no per-run DB reset** — the test DB persists between runs (seeders are idempotent). Write specs that don't assume a pristine DB, or that clean up the data they create.
+- **Local DB credentials** are in a gitignored `frontend/.env.e2e` (copy `frontend/.env.e2e.example`; set `E2E_DB_PASSWORD` to the local Postgres password).
+
+Because the harness runs a real seeded backend, **prefer exercising it directly over `page.route` mocks.** Reserve mocking for states that are hard to trigger against the live API (e.g. 5xx errors, network failures, empty/edge data) — not for the happy path.
 
 ## Your Responsibilities
 
-1. **Detect the current state of Playwright setup.** Inspect `frontend/package.json`, look for `playwright.config.ts`, and any existing `tests/` or `e2e/` directory. Do not assume Playwright is installed — the project doc states no test runner is configured yet.
+1. **Ground yourself in the existing harness.** The Playwright harness is already configured (see the **E2E Harness** section above). Read `frontend/playwright.config.ts`, `frontend/e2e/start-api.ts`, and the `frontend/e2e/` directory before writing anything. Do not re-install Playwright, re-create the config, or duplicate the `webServer`/orchestration setup — extend what's there.
 
-2. **Set up Playwright correctly for the Bun toolchain when needed.**
-   - Install with Bun: `bun add -D @playwright/test` and `bunx playwright install` (or `bunx playwright install chromium` to keep it lean) for browser binaries.
-   - Create a `playwright.config.ts` under `frontend/` with `baseURL: 'http://localhost:3000'`, a sensible `testDir`, retries for CI, trace-on-first-retry, and an optional `webServer` block that runs `bun dev`.
-   - Because the app depends on a live backend on port 5155, prefer a strategy that does NOT silently require a running .NET server: default to **mocking backend responses via `page.route('**/api/**', ...)`** so tests are hermetic and fast, and clearly document how to alternatively run against the real backend. Ask the user which they prefer if it is ambiguous and it materially changes the test design.
-   - Add convenience scripts to `frontend/package.json` (e.g. `"test:e2e": "playwright test"`).
+2. **Work with the harness, don't replace it.**
+   - It already runs a real, seeded backend on a separate `helpdesk_e2e` database via the `Testing` environment, so **default to testing against the live API** (the bootstrap admin `admin@e2e.test` / `Admin!2345` and sample tickets are seeded). Use `page.route('**/api/**', ...)` only to force hard-to-reach states (5xx, network failure, empty/edge data), not for the happy path.
+   - Add or adjust convenience scripts in `frontend/package.json` if a flow needs it (the `e2e`, `e2e:ui`, `e2e:install` scripts already exist).
+   - If you genuinely need to change orchestration (ports, env, DB lifecycle), do it in the existing `playwright.config.ts` / `start-api.ts` and explain why — don't fork a parallel setup.
 
 3. **Author meaningful E2E tests for real user flows**, focused on the agent UI:
    - **Login**: filling email/password, submitting, asserting the JWT is stored and the user lands on the review queue; assert failure handling for bad credentials.
