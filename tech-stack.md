@@ -12,6 +12,7 @@ solution using EF Core over PostgreSQL.
 | Backend API | **.NET 10**, controller-based Web API (not Minimal API) |
 | ORM | **EF Core** |
 | Database | **PostgreSQL** |
+| Auth | **ASP.NET Core Identity** (email/password) + **JWT bearer** tokens |
 | Architecture | Clean, multi-project solution (API / Core / Infrastructure) |
 
 ---
@@ -34,11 +35,28 @@ solution using EF Core over PostgreSQL.
 - Dependency injection wires repositories and services into controllers.
 - Returns DTOs (not entities) across the API boundary.
 
+## Authentication — ASP.NET Core Identity + JWT
+
+- **ASP.NET Core Identity** handles email/password: password hashing, normalized-email
+  lookups, and `UserManager` over EF Core stores. Registered with `AddIdentityCore` — no
+  `SignInManager`/cookies, since the API authenticates statelessly.
+- Login returns a **JWT bearer token** (HMAC-SHA256). `AuthController` exposes
+  `POST /api/auth/login`; protected endpoints use `[Authorize]`, and the `UserRole`
+  (Admin/Agent) rides along as a role claim so `[Authorize(Roles = …)]` works.
+- The Identity user (`ApplicationUser : IdentityUser<Guid>`) lives in **Infrastructure**;
+  **Core stays dependency-free**, keeping only the `UserRole` enum and the primitive
+  `ITokenService` contract. No login UI — clients call the API directly.
+- Signing key and the bootstrap-admin credentials come from configuration/secrets
+  (`Jwt:SigningKey`, `Bootstrap:*`), never committed.
+
 ## Persistence — EF Core + PostgreSQL
 
 - **EF Core** as the ORM with the **Npgsql** provider for PostgreSQL.
 - Code-first **migrations** checked into source control.
 - `DbContext` and repository implementations live in the Infrastructure project.
+- `AppDbContext` is an Identity context (`IdentityUserContext<ApplicationUser, Guid>`), so
+  Identity owns the `AspNetUsers` / user-claims / logins / tokens tables. Role is a plain
+  column (not Identity's role tables) — no `AspNetRoles`.
 
 ---
 
@@ -69,20 +87,24 @@ Helpdesk.Api  ──▶  Helpdesk.Core  ◀──  Helpdesk.Infrastructure
 ### Project responsibilities
 
 **Helpdesk.Core** — the domain, dependency-free.
-- Entities: `Ticket`, `User` (admin/agent), `Reply`/`Draft`, category enum, ticket state.
-- Interfaces: `ITicketRepository`, `IUserRepository`, plus service contracts such as
-  `IEmailClient` (Gmail), `IAiService` (classify/summarize/draft), `IKnowledgeBase`.
+- Entities: `Ticket`, `Reply`/`Draft`, category enum, ticket state, plus the `UserRole`
+  (Admin/Agent) enum. The user identity itself is an Identity concern, so it lives in
+  Infrastructure rather than here.
+- Interfaces: `ITicketRepository`, the `ITokenService` token contract, plus service
+  contracts such as `IEmailClient` (Gmail), `IAiService` (classify/summarize/draft),
+  `IKnowledgeBase`.
 
 **Helpdesk.Infrastructure** — implementations and I/O.
-- `AppDbContext` (EF Core) + entity configurations + migrations.
-- Repository implementations (`TicketRepository`, `UserRepository`, …).
+- `AppDbContext` (EF Core / Identity) + entity configurations + migrations.
+- Repository implementations (`TicketRepository`, …).
+- ASP.NET Core Identity: `ApplicationUser`, `UserManager`, and the JWT `TokenService`.
 - External integrations: Gmail client, LLM/AI service, the hardcoded knowledge base.
 
 **Helpdesk.Api** — the HTTP surface and composition root.
 - Controllers (`TicketsController`, `AuthController`, …).
 - DTOs + mapping, request validation, auth/role enforcement (admin vs agent).
-- `Program.cs`: DI registration, EF Core/Npgsql config, CORS for the Bun frontend,
-  connection strings and secrets via configuration.
+- `Program.cs`: DI registration, EF Core/Npgsql config, the JWT bearer authentication
+  scheme, CORS for the Bun frontend, connection strings and secrets via configuration.
 
 > Optional later: a `Helpdesk.Application` project for use-case/service orchestration if
 > business logic outgrows Core. Not needed for the MVP.
@@ -101,5 +123,7 @@ Helpdesk.Api  ──▶  Helpdesk.Core  ◀──  Helpdesk.Infrastructure
 ## Still open (not stack decisions)
 - LLM provider behind `IAiService`.
 - Gmail access method (OAuth on the mailbox vs. service account).
-- Auth mechanism for admin/agent logins.
 - Deployment target / hosting for the API, Postgres, and frontend.
+
+> Resolved: auth is **email/password via ASP.NET Core Identity with JWT bearer tokens**
+> (see [Authentication](#authentication--aspnet-core-identity--jwt)).
